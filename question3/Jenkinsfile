@@ -1,0 +1,37 @@
+pipeline {
+    environment {
+        registry = "REPO_NAME"
+        registryCredential = 'USER_NAME'
+        dockerImage = ''
+        buildNumber = '0.18.1'
+    }
+    agent any
+    stages {
+        stage('Cloning our Git') {
+            steps {
+            git 'https://github.com/kdsingh1984/k_dev_ops.git'
+        }
+    }
+    stage('Building our image') {
+        steps{
+            script {
+            dockerImage = docker.build registry + ":$buildNumber"
+            }
+        }
+    }
+    stage('Deploy our image') {
+        steps{
+            script {
+                docker.withRegistry( '', registryCredential ) {
+                dockerImage.push()
+                }
+            }
+        }
+    }
+    stage('Cleaning up local image') {
+        steps{
+            sh "docker rmi $registry:$buildNumber"
+            }
+        }
+    }
+}
